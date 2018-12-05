@@ -9,11 +9,12 @@ Created on Sun Dec  2 18:24:23 2018
 # Add a delete-all message function. 
 
 import requests, sys, threading, time
+from Utilities import *
 
 #Global Variables
 check_For_Messages = False
 user_ID = ''
-welcomeMenu = "1 = Sign-In || 2 = Register || 3 = View User Info(TEMP DEBUG) || 4 = Exit:\n"
+welcomeMenuText = "1 = Sign-In || 2 = Register || 3 = View User Info(TEMP DEBUG) || 4 = Exit:\n"
 baseURL = "https://www.brivatekeyle.me/api/"
 
 #method for pooling in the background for new messages
@@ -253,7 +254,8 @@ if __name__ == '__main__':
    
     while 1:
         print("Welcome to BrivateKeyle Chat")
-        choice = input(welcomeMenuText)
+        while 1:
+            choice = input(welcomeMenuText)
             # api-endpoint
             URL, API_Type, out = welcomeMenu(choice)
             if out == True:

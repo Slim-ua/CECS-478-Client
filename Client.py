@@ -253,42 +253,21 @@ if __name__ == '__main__':
    
     while 1:
         print("Welcome to BrivateKeyle Chat")
-        while 1:
-            choice = input(welcomeMenu)
-            # api-endpoint 
-            if choice == "1":
-                URL = baseURL + "signin"
-                API_Type = "post"
+        choice = input(welcomeMenuText)
+            # api-endpoint
+            URL, API_Type, out = welcomeMenu(choice)
+            if out == True:
                 break
-            elif choice == "2":
-                URL = baseURL + "register"
-                API_Type = "post"
-                break
-            elif choice == "3":
-                URL = baseURL + "users/"
-                API_Type = "get"
-                break
-            elif choice == "4":
-                print("\nExiting Program.")
-                sys.exit()
-            else:
-                print("Invalid Choice.")
         
          
         print()
           
         # defining a params dict for the parameters to be sent to the API 
         if choice == "1":
-            username = input("Please type in username:\n")
-            password = input("Please type in password:\n")
-            PARAMS = {'name':username, 'password':password}
-            HEADERS = {}
+            username, password, PARAMS, HEADERS = signIn()
         
         if choice == "2":
-            username = input("Please create a username:\n")
-            password = input("Please create a password:\n")
-            PARAMS = {'name':username, 'password':password}
-            HEADERS = {}
+            username, password, PARAMS, HEADERS = register()
             
         if choice == "3":
             PARAMS = {}

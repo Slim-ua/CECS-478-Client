@@ -14,9 +14,11 @@ from Utilities import *
 #Global Variables
 check_For_Messages = False
 user_ID = ''
-welcomeMenuText = "1 = Sign-In || 2 = Register || 3 = View User Info(TEMP DEBUG) || 4 = Exit:\n"
+welcomeMenuText = "1 = Sign-In || 2 = Register || 3 = Exit:\n"
 welcomeMessage = "Welcome to BrivateKeyle Chat"
 baseURL = "https://www.brivatekeyle.me/api/"
+notSignedInMessage = "\nCurrently Not Signed In."
+signedInMessage = "\nCurrently Signed In."
 
 #method for pooling in the background for new messages
 def Pooling():
@@ -251,64 +253,27 @@ def MakeRequest(URL, PARAMS, HEADERS, API_Type):
     return r
     
 
-if __name__ == '__main__':
-   
+if __name__ == '__main__':   
     while 1:
         print(welcomeMessage)
         while 1:
             choice = input(welcomeMenuText)
-            # api-endpoint
             URL, API_Type, out = welcomeMenu(choice)
             if out == True:
                 break
          
-        print()
-          
-        # defining a params dict for the parameters to be sent to the API
-        # choice 3 must be removed
-        if choice == "3":
-            PARAMS = {}
-            HEADERS = {}
-        else:  
-            username, password, PARAMS, HEADERS = logOrRegister(choice)
-    
-        response = MakeRequest(URL, PARAMS, HEADERS, API_Type)
-        
-        data = response.json()
-        
-        if choice == "1":
-            if data['success'] == True:
-                print()
-                print(data['message'])
-                sessionToken = data['token']
-                user_ID = data['user_ID']
-            else:
-                print()
-                print(data['message'])
-                sessionToken = None
-        elif choice == "2":
-            #Maybe add a 'success' parameter to check for this, along with a fail case
-            if '_id' in data:
-                print()
-                print("Registration Complete.")
-                sessionToken = None
-            else:
-                print()
-                print("Registration Failed.")
-                print(data)
-                sessionToken = None
-        elif choice == "3":
-            #Debug list (not final, make private later)
-            print(data)
-            sessionToken = None
-        else:
-            print("Invalid Choice.")
-            sessionToken = None
-        
+        print()        
+        # Defining parameters for API Request based on choice
+        PARAMS, HEADERS = logOrRegister(choice) 
+        # Make a request to the API
+        response = MakeRequest(URL, PARAMS, HEADERS, API_Type)       
+        # Get data from the API response
+        sessionToken, user_ID = handleApiResponse(response.json())
+        # Determine status of the session
         if sessionToken is None:
-            print("\nCurrently Not Signed In.")
+            print(notSignedInMessage)
         else:
-            print("\nCurrently Signed In.")
+            print(signedInMessage)
             check_For_Messages = True
             Session(sessionToken)
             

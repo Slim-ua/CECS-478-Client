@@ -25,10 +25,6 @@ def welcomeMenu(choice):
         API_Type = "post"
         out = True
     elif choice == "3":
-        URL = baseURL + "users/"
-        API_Type = "get"
-        out = True
-    elif choice == "4":
         print("\nExiting Program.")
         sys.exit()
     else:
@@ -37,7 +33,7 @@ def welcomeMenu(choice):
     return URL, API_Type, out
 
 def logOrRegister(choice):
-    if choice == 1: #Log in
+    if choice == "1": #Log in
         username = input(typeNameMessage)
         password = input(typePassMessage)
     else: #Register
@@ -46,5 +42,17 @@ def logOrRegister(choice):
         
     PARAMS = {'name':username, 'password':password}
     HEADERS = {}
-    return username, password, PARAMS, HEADERS
+    return PARAMS, HEADERS
+
+def handleApiResponse(data):
+    sessionToken = None
+    user_ID = ""
+    if 'success' in data and data['success']  == True:
+        print(data['message'])
+        sessionToken = data['token'] if 'token' in data else None
+        user_ID = data['user_ID']
+    else:
+        print(data['message'])
+        
+    return sessionToken, user_ID
        

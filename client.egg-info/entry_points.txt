@@ -1,3 +1,0 @@
-[console_scripts]
-client = client.__main__:main
-

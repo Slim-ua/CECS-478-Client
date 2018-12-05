@@ -6,9 +6,7 @@ Created on Sun Dec  2 18:24:23 2018
 """
 
 #Ideas: 
-# Add a delete-all function. 
-# Need a storage bank that contains a list of contact ID's/Names to reference for selecting specific users.
-# ADD POLLING FOR NEW MESSAGES
+# Add a delete-all message function. 
 
 import requests, sys, threading, time
 
@@ -30,13 +28,9 @@ def Pooling():
         data = response.json()
         for msg in data:
             if msg["status"] == 'New' and msg["sender_ID"] != user_ID:
-                #if 'Message_date' in msg:
-                 #   print(msg['Message_date'])
                 print('New message received from:')
                 if 'sender' in msg:
                     print(msg['sender'])
-                #if 'message' in msg:
-                 #   print(msg['message'])
                 print()
                 URL = "https://www.brivatekeyle.me/message/" + msg['_id']
                 API_Type = "put"
@@ -51,11 +45,11 @@ def Session(sessionToken):
     p.start()
     while 1:
         while 1:
-            choice = input("1 = View All Messages || 2 = View All Unread Messages || 3 = Post Message || 4 = View A User's Message || 5 = Delete A Message || 6 = Sign-Out:\n")
+            choice = input("1 = View All Messages || 2 = View All Unread Messages || 3 = Post Message || 4 = View Sent Messages || 5 = Delete A Message || 6 = Sign-Out:\n")
             
             # api-endpoint 
-            if choice == "1" or choice == "5":
-                URL = "https://www.brivatekeyle.me/allmessages"
+            if choice == "1":
+                URL = "https://www.brivatekeyle.me/messages" + "/" + username
                 API_Type = "get"
                 break
             elif choice == "2":
@@ -67,8 +61,11 @@ def Session(sessionToken):
                 API_Type = "post"
                 break
             elif choice == "4":
-                #Need a storage bank that contains a list of contact ID's/Names to reference
-                URL = "https://www.brivatekeyle.me/message/" + ""#Get user ID and append
+                URL = "https://www.brivatekeyle.me/allmessages"
+                API_Type = "get"
+                break
+            elif choice == "5":
+                URL = "https://www.brivatekeyle.me/allmessages"
                 API_Type = "get"
                 break
             elif choice == "6":
@@ -81,7 +78,7 @@ def Session(sessionToken):
                 print("Invalid Choice.")
     
         print()
-        if choice == "1" or choice == "5":
+        if choice == "1":
             HEADERS = {'x-access-token':sessionToken}
             PARAMS = {}
         elif choice == "2":
@@ -93,9 +90,11 @@ def Session(sessionToken):
             receiver = input("Enter the receiver:\n")
             HEADERS = {'x-access-token':sessionToken}
             PARAMS = {'sender':username, 'receiver':receiver, 
-                      'message':message, 'sender_ID':user_ID} #Add recipient_ID after making storage bank for contacts
+                      'message':message, 'sender_ID':user_ID}
         elif choice == "4":
-            #TODO
+            HEADERS = {'x-access-token':sessionToken}
+            PARAMS = {}
+        elif choice == "5":
             HEADERS = {'x-access-token':sessionToken}
             PARAMS = {}
         
@@ -104,78 +103,81 @@ def Session(sessionToken):
         data = response.json()
         
         if choice == "1":
-            if not data:
-                print('No Messages Available.')
-            else:
-                #print(data) #Can choose full element with data[1], etc. Can choose specific data with data[0]['DATANAME'], etc.
-                for msg in data:
-                    if 'Message_date' in msg:
-                        print(msg['Message_date'])
-                    if 'sender' in msg:
-                        print(msg['sender'])
-                    if 'message' in msg:
-                        print(msg['message'])
-                    if 'status' in msg:
-                        print(msg['status'])
-                    if 'receiver' in msg:
-                        print(msg['receiver'])
-                    print()
-                    
-                    #Changes message 'status' to Read
-                    if msg['sender_ID'] != user_ID:
-                        if msg['status'] == 'Unread' or msg['status'] == 'New':
-                            URL = "https://www.brivatekeyle.me/message/" + msg['_id']
-                            API_Type = "put"
-                            HEADERS = {'x-access-token':sessionToken}
-                            PARAMS = {'status':'Read'}
-                            MakeRequest(URL, PARAMS, HEADERS, API_Type)
-                
-                        
-                
-        elif choice == "2":
-            #msg_Amount = len(data)
             unread_Flag = False
             if not data:
                 print('No Messages Available.')
             else:
                 for msg in data:
-                    if msg["sender_ID"] != user_ID:
-                        if msg['status'] == 'Read' or msg['status'] == 'New':
-                            if 'Message_date' in msg:
-                                print('Date: ' + msg['Message_date'])
-                            if 'name' in msg:
-                                print('Name: ' + msg['name'])
-                            if 'message' in msg:
-                                print('Message: ' + msg['message'])
-                            if 'sender' in msg:
-                                print('Sender: ' + msg['sender'])
-                            if 'receiver' in msg:
-                                print('Receiver: ' + msg['receiver'])
-                            print()
-                            
-                            #Changes message 'status' to Read
-                            URL = "https://www.brivatekeyle.me/message/" + msg['_id']
-                            API_Type = "put"
-                            HEADERS = {'x-access-token':sessionToken}
-                            PARAMS = {'status':'Read'}
-                            MakeRequest(URL, PARAMS, HEADERS, API_Type)
-                            
-                            unread_Flag = True
-                        else:
-                            #Prints message if no messages were found from end of search
-                            if msg['_id'] == data[-1]['_id']:
-                                if unread_Flag == False:
-                                    print('No Unread Messages Available.')
+                    if 'Message_date' in msg:
+                        print('Date: ' + msg['Message_date'])
+                    if 'sender' in msg:
+                        print('Sent From: ' + msg['sender'])
+                    if 'message' in msg:
+                        print('Message: ' + msg['message'])
+                    print()
+                    
+                    if msg['status'] != 'Read':
+                        #Changes message 'status' to Read
+                        URL = "https://www.brivatekeyle.me/message/" + msg['_id']
+                        API_Type = "put"
+                        HEADERS = {'x-access-token':sessionToken}
+                        PARAMS = {'status':'Read'}
+                        MakeRequest(URL, PARAMS, HEADERS, API_Type)
+                        
+                        unread_Flag = True
+                
+        elif choice == "2":
+            unread_Flag = False
+            if not data:
+                print('No Unread Messages Available.')
+            else:
+                for msg in data:
+                    if msg['status'] == 'Unread' or msg['status'] == 'New':
+                        if 'Message_date' in msg:
+                            print('Date: ' + msg['Message_date'])
+                        if 'sender' in msg:
+                            print('Sent From: ' + msg['sender'])
+                        if 'message' in msg:
+                            print('Message: ' + msg['message'])
+                        print()
+                        
+                        #Changes message 'status' to Read
+                        URL = "https://www.brivatekeyle.me/message/" + msg['_id']
+                        API_Type = "put"
+                        HEADERS = {'x-access-token':sessionToken}
+                        PARAMS = {'status':'Read'}
+                        MakeRequest(URL, PARAMS, HEADERS, API_Type)
+                        
+                        unread_Flag = True
                     else:
                         #Prints message if no messages were found from end of search
                         if msg['_id'] == data[-1]['_id']:
                             if unread_Flag == False:
                                 print('No Unread Messages Available.')
+                                
         elif choice == "3":
             if '_id' in data:
                 print('Message Posted Successfully.')
         elif choice == "4":
-            print(data)
+            sent_Flag = False
+            if not data:
+                print('No Messages Sent.')
+            else:
+                for msg in data:
+                    if msg['sender_ID'] == user_ID:
+                        if 'Message_date' in msg:
+                            print('Date: ' + msg['Message_date'])
+                        if 'receiver' in msg:
+                                print('Sent To: ' + msg['receiver'])
+                        if 'message' in msg:
+                            print('Message: ' + msg['message'])
+                        print()
+                        sent_Flag = True
+                    else:
+                        if msg['_id'] == data[-1]['_id']:
+                            if sent_Flag == False:
+                                print('No Messages Sent.')
+
         elif choice == "5":
             amount = 0
             delete_Flag = False
@@ -187,11 +189,11 @@ def Session(sessionToken):
                         amount = amount + 1
                         print("Message #" + str(amount) + ":")
                         if 'Message_date' in msg:
-                            print(msg['Message_date'])
-                        if 'name' in msg:
-                            print(msg['name'])
+                            print('Date: ' + msg['Message_date'])
+                        if 'receiver' in msg:
+                                print('Sent To: ' + msg['receiver'])
                         if 'message' in msg:
-                            print(msg['message'])
+                            print('Message: ' + msg['message'])
                         print()
                         delete_Flag = True
                     else:
@@ -225,8 +227,6 @@ def Session(sessionToken):
                                 break
                             else:
                                 print('Invalid Message Selection.')
-                
-                
             
         else:
             print("Invalid Choice.")

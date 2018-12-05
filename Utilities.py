@@ -7,6 +7,10 @@ Created on Wed Dec  5 17:59:29 2018
 import sys
 
 baseURL = "https://www.brivatekeyle.me/api/"
+typeNameMessage = "Please type in username:\n"
+typePassMessage = "Please type in password:\n"
+createNameMessage = "Please create a username:\n"
+createPassMessage = "Please create a password:\n"
 
 def welcomeMenu(choice):
     URL = ""
@@ -32,16 +36,15 @@ def welcomeMenu(choice):
         
     return URL, API_Type, out
 
-def signIn():
-    username = input("Please type in username:\n")
-    password = input("Please type in password:\n")
+def logOrRegister(choice):
+    if choice == 1: #Log in
+        username = input(typeNameMessage)
+        password = input(typePassMessage)
+    else: #Register
+        username = input(createNameMessage)
+        password = input(createPassMessage)
+        
     PARAMS = {'name':username, 'password':password}
     HEADERS = {}
     return username, password, PARAMS, HEADERS
-
-def register():
-    username = input("Please create a username:\n")
-    password = input("Please create a password:\n")
-    PARAMS = {'name':username, 'password':password}
-    HEADERS = {}
-    return username, password, PARAMS, HEADERS
+       

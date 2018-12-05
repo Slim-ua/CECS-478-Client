@@ -15,6 +15,7 @@ from Utilities import *
 check_For_Messages = False
 user_ID = ''
 welcomeMenuText = "1 = Sign-In || 2 = Register || 3 = View User Info(TEMP DEBUG) || 4 = Exit:\n"
+welcomeMessage = "Welcome to BrivateKeyle Chat"
 baseURL = "https://www.brivatekeyle.me/api/"
 
 #method for pooling in the background for new messages
@@ -253,27 +254,23 @@ def MakeRequest(URL, PARAMS, HEADERS, API_Type):
 if __name__ == '__main__':
    
     while 1:
-        print("Welcome to BrivateKeyle Chat")
+        print(welcomeMessage)
         while 1:
             choice = input(welcomeMenuText)
             # api-endpoint
             URL, API_Type, out = welcomeMenu(choice)
             if out == True:
                 break
-        
          
         print()
           
-        # defining a params dict for the parameters to be sent to the API 
-        if choice == "1":
-            username, password, PARAMS, HEADERS = signIn()
-        
-        if choice == "2":
-            username, password, PARAMS, HEADERS = register()
-            
+        # defining a params dict for the parameters to be sent to the API
+        # choice 3 must be removed
         if choice == "3":
             PARAMS = {}
             HEADERS = {}
+        else:  
+            username, password, PARAMS, HEADERS = logOrRegister(choice)
     
         response = MakeRequest(URL, PARAMS, HEADERS, API_Type)
         

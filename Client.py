@@ -13,12 +13,15 @@ from Utilities import *
 
 #Global Variables
 check_For_Messages = False
-user_ID = ''
 welcomeMenuText = "1 = Sign-In || 2 = Register || 3 = Exit:\n"
+logedInMenuText = ("1 = View All Messages || 2 = View All Unread Messages"
+                   "|| 3 = Post Message || 4 = View Sent Messages" 
+                   "|| 5 = Delete A Message || 6 = Sign-Out:\n")
 welcomeMessage = "Welcome to BrivateKeyle Chat"
 baseURL = "https://www.brivatekeyle.me/api/"
 notSignedInMessage = "\nCurrently Not Signed In."
 signedInMessage = "\nCurrently Signed In."
+
 
 #method for pooling in the background for new messages
 def Pooling():
@@ -43,43 +46,20 @@ def Pooling():
                 MakeRequest(URL, PARAMS, HEADERS, API_Type)
         time.sleep(2)
 
-def Session(sessionToken):
+def Session(sessionToken, username):
     global user_ID
     p = threading.Thread(name = 'Pooling', target = Pooling)
     p.start()
     while 1:
         while 1:
-            choice = input("1 = View All Messages || 2 = View All Unread Messages || 3 = Post Message || 4 = View Sent Messages || 5 = Delete A Message || 6 = Sign-Out:\n")
-            
-            # api-endpoint 
-            if choice == "1":
-                URL = "https://www.brivatekeyle.me/messages" + "/" + username
-                API_Type = "get"
+            global check_For_Messages
+            choice = input(logedInMenuText)
+            URL, API_Type, check_For_Messages, exitCode = logedInMenu(choice, username)
+            if exitCode == "1":
                 break
-            elif choice == "2":
-                URL = "https://www.brivatekeyle.me/messages" + "/" + username
-                API_Type = "get"
-                break
-            elif choice == "3":
-                URL = "https://www.brivatekeyle.me/messages"
-                API_Type = "post"
-                break
-            elif choice == "4":
-                URL = "https://www.brivatekeyle.me/allmessages"
-                API_Type = "get"
-                break
-            elif choice == "5":
-                URL = "https://www.brivatekeyle.me/allmessages"
-                API_Type = "get"
-                break
-            elif choice == "6":
-                print("\nSigning Out.")
-                global check_For_Messages
-                check_For_Messages = False
-                user_ID = ''
+            elif exitCode == "2":
                 return
-            else:
-                print("Invalid Choice.")
+                
     
         print()
         if choice == "1":
@@ -268,14 +248,14 @@ if __name__ == '__main__':
         # Make a request to the API
         response = MakeRequest(URL, PARAMS, HEADERS, API_Type)       
         # Get data from the API response
-        sessionToken, user_ID = handleApiResponse(response.json())
+        sessionToken, username = handleApiResponse(response.json())
         # Determine status of the session
         if sessionToken is None:
             print(notSignedInMessage)
         else:
             print(signedInMessage)
             check_For_Messages = True
-            Session(sessionToken)
+            Session(sessionToken, username)
             
         print()
           

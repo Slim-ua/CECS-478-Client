@@ -54,6 +54,7 @@ def Session(sessionToken, username):
         while 1:
             global check_For_Messages
             choice = input(logedInMenuText)
+            # Get URL and type of HTTP request based on menu choice
             URL, API_Type, check_For_Messages, exitCode = logedInMenu(choice, username)
             if exitCode == "1":
                 break
@@ -61,7 +62,9 @@ def Session(sessionToken, username):
                 return
                     
         print()
-        HEADERS, PARAMS = logedInAction(choice, sessionToken, username)        
+        # Determine HTTP headers and parameters based on previous choice on menu
+        HEADERS, PARAMS = logedInAction(choice, sessionToken, username)     
+        # Make API request
         response = MakeRequest(URL, PARAMS, HEADERS, API_Type)
         data = response.json()
         
@@ -78,13 +81,14 @@ def Session(sessionToken, username):
             viewSentMessages(data, sessionToken, username)
 
         elif choice == "5":
-            amount = 0
+            deleteAMessage(data, sessionToken, username)
+            '''amount = 0
             delete_Flag = False
             if not data:
                 print('No Messages Available.')
             else:
                 for msg in data:
-                    if msg['sender_ID'] == user_ID:
+                    if msg['sender'] == username:
                         amount = amount + 1
                         print("Message #" + str(amount) + ":")
                         if 'Message_date' in msg:
@@ -125,7 +129,7 @@ def Session(sessionToken, username):
                                 print('Message Deleted Successfully.')
                                 break
                             else:
-                                print('Invalid Message Selection.')
+                                print('Invalid Message Selection.')'''
             
         else:
             print("Invalid Choice.")

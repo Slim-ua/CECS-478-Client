@@ -19,6 +19,11 @@ readStatusMessage = "Read"
 noMessagesAvailable = "No Messages Available."
 noUnreadMessagesAvailable = "No Unread Messages Available."
 noMessagesSent = "No Messages Sent."
+messageNText = "Message #"
+deleteMessage = "Please enter which message # you would like to delete (0 = Cancel):\n"
+notNumberMessage = "Input is not a number."
+cancelDeletionMessage = "Canceling Deletion."
+invalidSelectionMessage = "Invalid Message Selection."
 
 def MakeRequest(URL, PARAMS, HEADERS, API_Type):
     # sending get request and saving the response as response object 
@@ -184,6 +189,54 @@ def viewSentMessages(data, sessionToken, username):
         if sentMessages == 0:
             print(noMessagesSent)
 
+def makeDeleteRequest(data, msgNumber, sessionToken):
+    URL = "https://www.brivatekeyle.me/message/" + data[msgNumber]['_id']
+    API_Type = "delete"
+    HEADERS = {'x-access-token':sessionToken}
+    PARAMS = {}
+    return MakeRequest(URL, PARAMS, HEADERS, API_Type)
+    
+    
+def deleteAMessage(data, sessionToken, username):
+    messageN = 0
+    delete_Flag = True
+    delete_Numb = -1
+    
+    if not data:
+        print(noMessagesAvailable)
+    else:
+        for msg in data:
+            if msg['sender'] == username:
+                messageN += 1
+                print(messageNText + str(messageN))
+                printMessage(msg)
+                        
+        if messageN == 0:
+            print(noMessagesAvailable)
+            delete_Flag = False
+            
+        while delete_Flag:           
+            try:
+                delete_Numb = int(input(deleteMessage)) - 1
+                print(delete_Numb)
+            except ValueError:
+                print(notNumberMessage)
+            #Deletes a message based on delete_Numb
+            if delete_Numb == -1:
+                print(cancelDeletionMessage)
+                break
+            else:
+                print(len(data))
+                if delete_Numb < 0 or delete_Numb > len(data):
+                    print(invalidSelectionMessage)
+                else:
+                    if data[delete_Numb]['sender'] == username:
+                        response = makeDeleteRequest(data, delete_Numb, sessionToken)
+                        data = response.json()
+                        print(data['message'])
+                        delete_Flag = False
+                    else:
+                        print(invalidSelectionMessage)
 
 
 

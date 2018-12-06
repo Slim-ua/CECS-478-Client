@@ -172,18 +172,17 @@ def viewAllUnreadMessagesManager(data, sessionToken):
             
 
 def viewSentMessages(data, sessionToken, username):
-    sent_Flag = False
+    sentMessages = 0
     if not data:
         print(noMessagesSent)
     else:
         for msg in data:
             if msg['sender'] == username:
                 printMessage(msg)
-                sent_Flag = True
-            else:
-                if msg['_id'] == data[-1]['_id']:
-                    if sent_Flag == False:
-                        print('No Messages Sent.')
+                sentMessages += 1
+        
+        if sentMessages == 0:
+            print(noMessagesSent)
 
 
 

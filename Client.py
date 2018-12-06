@@ -69,28 +69,13 @@ def Session(sessionToken, username):
             viewAllMessagesManager(data, sessionToken)        
             
         elif choice == "2":
-            viewAllUnreadMessagesManager(data, sessionToken)                                
+            viewAllUnreadMessagesManager(data, sessionToken)    
+                            
         elif choice == "3":
             print(data['message'])
+            
         elif choice == "4":
-            sent_Flag = False
-            if not data:
-                print('No Messages Sent.')
-            else:
-                for msg in data:
-                    if msg['sender_ID'] == user_ID:
-                        if 'Message_date' in msg:
-                            print('Date: ' + msg['Message_date'])
-                        if 'receiver' in msg:
-                                print('Sent To: ' + msg['receiver'])
-                        if 'message' in msg:
-                            print('Message: ' + msg['message'])
-                        print()
-                        sent_Flag = True
-                    else:
-                        if msg['_id'] == data[-1]['_id']:
-                            if sent_Flag == False:
-                                print('No Messages Sent.')
+            viewSentMessages(data, sessionToken, username)
 
         elif choice == "5":
             amount = 0

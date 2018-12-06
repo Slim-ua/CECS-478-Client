@@ -59,32 +59,11 @@ def Session(sessionToken, username):
                 break
             elif exitCode == "2":
                 return
-                
-    
+                    
         print()
-        if choice == "1":
-            HEADERS = {'x-access-token':sessionToken}
-            PARAMS = {}
-        elif choice == "2":
-             HEADERS = {'x-access-token':sessionToken}
-             PARAMS = {}
-             #print(username)
-        elif choice == "3":
-            message = input("Enter your message:\n")
-            receiver = input("Enter the receiver:\n")
-            HEADERS = {'x-access-token':sessionToken}
-            PARAMS = {'sender':username, 'receiver':receiver, 
-                      'message':message, 'sender_ID':user_ID}
-        elif choice == "4":
-            HEADERS = {'x-access-token':sessionToken}
-            PARAMS = {}
-        elif choice == "5":
-            HEADERS = {'x-access-token':sessionToken}
-            PARAMS = {}
-        
+        HEADERS, PARAMS = logedInAction(choice, sessionToken, username)        
         response = MakeRequest(URL, PARAMS, HEADERS, API_Type)
-        #print(response)
-        data = response.json()
+        #data = response.json()
         
         if choice == "1":
             unread_Flag = False

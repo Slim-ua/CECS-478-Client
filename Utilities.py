@@ -11,6 +11,8 @@ typeNameMessage = "Please type in username:\n"
 typePassMessage = "Please type in password:\n"
 createNameMessage = "Please create a username:\n"
 createPassMessage = "Please create a password:\n"
+enterAMessage = "Enter your message:\n"
+enterAReceiver = "Enter the receiver:\n"
 invalidChoiceMessage = "Invalid Choice."
 signingOutMessage = "\nSigning Out."
 
@@ -87,5 +89,17 @@ def handleApiResponse(data):
         print(data['message'])
         
     return sessionToken, userName
+
+def logedInAction(choice, sessionToken, username):
+    HEADERS = {'x-access-token':sessionToken}
+    PARAMS = {}
+    
+    if choice == "3": #Post a message
+        message = input(enterAMessage)
+        receiver = input(enterAReceiver)
+        PARAMS = {'sender':username, 'receiver':receiver, 
+                  'message':message}
+    
+    return HEADERS, PARAMS
 
        

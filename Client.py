@@ -63,7 +63,7 @@ def Session(sessionToken, username):
         print()
         HEADERS, PARAMS = logedInAction(choice, sessionToken, username)        
         response = MakeRequest(URL, PARAMS, HEADERS, API_Type)
-        #data = response.json()
+        data = response.json()
         
         if choice == "1":
             unread_Flag = False

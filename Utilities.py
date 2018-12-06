@@ -17,6 +17,7 @@ invalidChoiceMessage = "Invalid Choice."
 signingOutMessage = "\nSigning Out."
 readStatusMessage = "Read"
 noMessagesAvailable = "No Messages Available."
+noUnreadMessagesAvailable = "No Unread Messages Available."
 
 
 def MakeRequest(URL, PARAMS, HEADERS, API_Type):
@@ -155,5 +156,16 @@ def viewAllMessagesManager(data, sessionToken):
                 changeMessageStatusToRead(msg, sessionToken)
 
                 
-
-       
+def viewAllUnreadMessagesManager(data, sessionToken):
+    readedMessages = 0 
+    if not data:
+        print(noMessagesAvailable)
+    else:
+        for msg in data:
+            if msg['status'] == 'Unread' or msg['status'] == 'New':
+                printMessage(msg)
+                changeMessageStatusToRead(msg, sessionToken)
+                readedMessages += 1
+                 
+        if readedMessages == 0:
+            print(noUnreadMessagesAvailable)

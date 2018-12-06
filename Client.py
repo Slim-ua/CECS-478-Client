@@ -66,35 +66,10 @@ def Session(sessionToken, username):
         data = response.json()
         
         if choice == "1":
-            viewAllMessagesManager(data, sessionToken)                
+            viewAllMessagesManager(data, sessionToken)        
+            
         elif choice == "2":
-            unread_Flag = False
-            if not data:
-                print('No Unread Messages Available.')
-            else:
-                for msg in data:
-                    if msg['status'] == 'Unread' or msg['status'] == 'New':
-                        if 'Message_date' in msg:
-                            print('Date: ' + msg['Message_date'])
-                        if 'sender' in msg:
-                            print('Sent From: ' + msg['sender'])
-                        if 'message' in msg:
-                            print('Message: ' + msg['message'])
-                        print()
-                        
-                        #Changes message 'status' to Read
-                        URL = "https://www.brivatekeyle.me/message/" + msg['_id']
-                        API_Type = "put"
-                        HEADERS = {'x-access-token':sessionToken}
-                        PARAMS = {'status':'Read'}
-                        MakeRequest(URL, PARAMS, HEADERS, API_Type)
-                        
-                        unread_Flag = True
-                    else:
-                        #Prints message if no messages were found from end of search
-                        if msg['_id'] == data[-1]['_id']:
-                            if unread_Flag == False:
-                                print('No Unread Messages Available.')
+            viewAllUnreadMessagesManager(data, sessionToken)
                                 
         elif choice == "3":
             if '_id' in data:

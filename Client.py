@@ -69,11 +69,9 @@ def Session(sessionToken, username):
             viewAllMessagesManager(data, sessionToken)        
             
         elif choice == "2":
-            viewAllUnreadMessagesManager(data, sessionToken)
-                                
+            viewAllUnreadMessagesManager(data, sessionToken)                                
         elif choice == "3":
-            if '_id' in data:
-                print('Message Posted Successfully.')
+            print(data['message'])
         elif choice == "4":
             sent_Flag = False
             if not data:

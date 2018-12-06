@@ -18,7 +18,7 @@ signingOutMessage = "\nSigning Out."
 readStatusMessage = "Read"
 noMessagesAvailable = "No Messages Available."
 noUnreadMessagesAvailable = "No Unread Messages Available."
-
+noMessagesSent = "No Messages Sent."
 
 def MakeRequest(URL, PARAMS, HEADERS, API_Type):
     # sending get request and saving the response as response object 
@@ -169,3 +169,36 @@ def viewAllUnreadMessagesManager(data, sessionToken):
                  
         if readedMessages == 0:
             print(noUnreadMessagesAvailable)
+            
+
+def viewSentMessages(data, sessionToken, username):
+    sent_Flag = False
+    if not data:
+        print(noMessagesSent)
+    else:
+        for msg in data:
+            if msg['sender'] == username:
+                printMessage(msg)
+                sent_Flag = True
+            else:
+                if msg['_id'] == data[-1]['_id']:
+                    if sent_Flag == False:
+                        print('No Messages Sent.')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

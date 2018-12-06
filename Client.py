@@ -66,29 +66,7 @@ def Session(sessionToken, username):
         data = response.json()
         
         if choice == "1":
-            unread_Flag = False
-            if not data:
-                print('No Messages Available.')
-            else:
-                for msg in data:
-                    if 'Message_date' in msg:
-                        print('Date: ' + msg['Message_date'])
-                    if 'sender' in msg:
-                        print('Sent From: ' + msg['sender'])
-                    if 'message' in msg:
-                        print('Message: ' + msg['message'])
-                    print()
-                    
-                    if msg['status'] != 'Read':
-                        #Changes message 'status' to Read
-                        URL = "https://www.brivatekeyle.me/message/" + msg['_id']
-                        API_Type = "put"
-                        HEADERS = {'x-access-token':sessionToken}
-                        PARAMS = {'status':'Read'}
-                        MakeRequest(URL, PARAMS, HEADERS, API_Type)
-                        
-                        unread_Flag = True
-                
+            viewAllMessagesManager(data, sessionToken)                
         elif choice == "2":
             unread_Flag = False
             if not data:
@@ -194,22 +172,6 @@ def Session(sessionToken, username):
         else:
             print("Invalid Choice.")
         print()
-
-def MakeRequest(URL, PARAMS, HEADERS, API_Type):
-    # sending get request and saving the response as response object 
-    
-    if API_Type == "get":
-        r = requests.get(url = URL, params = PARAMS, headers = HEADERS)
-    elif API_Type == "post":
-        r = requests.post(url = URL, data = PARAMS, headers = HEADERS)
-    elif API_Type == "put":
-        r = requests.put(url = URL, data = PARAMS, headers = HEADERS)
-    elif API_Type == "delete":
-        r = requests.delete(url = URL, data = PARAMS, headers = HEADERS)
-    else:
-        r = "FAIL"
-        print("Invalid API_Type.")
-    return r
     
 
 if __name__ == '__main__':   

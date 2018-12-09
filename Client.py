@@ -86,24 +86,28 @@ def Session(sessionToken, username):
             DH_private_key = ECDH.GenerateKeyPairs()
             receiver = input("Enter the receiver:\n")
             #retrieve/verify receiver's key
-            URL = "https://www.brivatekeyle.me/api/users"
+            URL = "https://www.brivatekeyle.me/api/users/" + receiver
             API_Type = "get"
             HEADERS = {'x-access-token':sessionToken}
-            PARAMS = {'receiver':receiver}
+            PARAMS = {}
             response = MakeRequest(URL, PARAMS, HEADERS, API_Type)
             data = response.json()
-            if 'DH_Pub_Key' in data:
-                Receiver_DH_Pub_Key = data['DH_Pub_Key']
-            else:
-                print("Error, no DH_Pub_Key found.")
-            if 'Signed_DH_Pub_Key' in data:
-                Receiver_Signed_DH_Pub_Key = data['Signed_DH_Pub_Key']
-            else:
-                print("Error, no DH_Pub_Key found.")
-            if 'RSA_Pub_Key' in data:
-                Receiver_RSA_Pub_Key = data['RSA_Pub_Key']
-            else:
-                print("Error, no RSA_Pub_Key found.")
+            print(data)
+            for msg in data:
+                if 'DH_Pub_Key' in msg:
+                    Receiver_DH_Pub_Key = serialization.load_pem_public_key(msg['DH_Pub_Key'], default_backend())
+                    #Receiver_DH_Pub_Key = msg['DH_Pub_Key']
+                else:
+                    print("Error, no DH_Pub_Key found.")
+                if 'Signed_DH_Pub_Key' in msg:
+                    Receiver_Signed_DH_Pub_Key = msg['Signed_DH_Pub_Key']
+                else:
+                    print("Error, no Signed_DH_Pub_Key found.")
+                if 'RSA_Pub_Key' in msg:
+                    Receiver_RSA_Pub_Key = serialization.load_pem_public_key(msg['RSA_Pub_Key'], default_backend())
+                    #Receiver_RSA_Pub_Key = msg['RSA_Pub_Key']
+                else:
+                    print("Error, no RSA_Pub_Key found.")
                 
             #In sender, retrieve receiver's RSA Public Key + Signed DH Public Key + DH Public Key and Verify
             Receiver_RSA_Pub_Key.verify(

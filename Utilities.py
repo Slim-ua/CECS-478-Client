@@ -5,6 +5,7 @@ Created on Wed Dec  5 17:59:29 2018
 @author: Luisa
 """
 import sys, ECDH, Encrypt
+from cryptography.hazmat.primitives import serialization
 
 baseURL = "https://www.brivatekeyle.me/"
 typeNameMessage = "Please type in username:\n"
@@ -72,6 +73,17 @@ def logOrRegister(choice):
         DH_private_key = ECDH.GenerateKeyPairs()
         RSA_private_key = Encrypt.RSA_GenerateKeyPairs()
         
+        DH_storeable_public_key = DH_private_key.public_key().public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+            #encryption_algorithm=serialization.BestAvailableEncryption(b'brivatekeyle')
+        )
+        RSA_storeable_public_key = RSA_private_key.public_key().public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+            #encryption_algorithm=serialization.BestAvailableEncryption(b'brivatekeyle')
+        )
+        
         #Creates signature for DH Public Key
         signed_DH_pubKey = Encrypt.DH_Signature(DH_private_key.public_key(), RSA_private_key)
         
@@ -83,11 +95,22 @@ def logOrRegister(choice):
         DH_private_key = ECDH.GenerateKeyPairs()
         RSA_private_key = Encrypt.RSA_GenerateKeyPairs()
         
+        DH_storeable_public_key = DH_private_key.public_key().public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+            #encryption_algorithm=serialization.BestAvailableEncryption(b'brivatekeyle')
+        )
+        RSA_storeable_public_key = RSA_private_key.public_key().public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+            #encryption_algorithm=serialization.BestAvailableEncryption(b'brivatekeyle')
+        )
+        
         #Creates signature for DH Public Key
         signed_DH_pubKey = Encrypt.DH_Signature(DH_private_key.public_key(), RSA_private_key)
         
         
-    PARAMS = {'name':username, 'password':password, 'DH_Pub_Key':DH_private_key.public_key(), 'Signed_DH_Pub_Key':signed_DH_pubKey, 'RSA_Pub_Key':RSA_private_key.public_key()}
+    PARAMS = {'name':username, 'password':password, 'DH_Pub_Key':DH_storeable_public_key, 'Signed_DH_Pub_Key':signed_DH_pubKey, 'RSA_Pub_Key':RSA_storeable_public_key}
     HEADERS = {}
     return PARAMS, HEADERS
 

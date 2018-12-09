@@ -14,10 +14,8 @@ from cryptography.hazmat.primitives.asymmetric import ec
 def GenerateKeyPairs():
     DHprivateKeyPath = os.path.dirname(os.path.realpath(sys.argv[0])) + "\DH_private.pem"
     if os.path.exists(DHprivateKeyPath):
-        print("DH Private Key Exists.\n")
         DH_private_key = Encrypt.loadPrivateKey(DHprivateKeyPath)
     else:
-        print("Generating new DH Private Key.\n")
         #Generate a private key for use in the exchange.
         DH_private_key = ec.generate_private_key(
             ec.SECP384R1(), default_backend()

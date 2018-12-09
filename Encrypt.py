@@ -39,10 +39,8 @@ def loadPrivateKey(filename):
 def RSA_GenerateKeyPairs():
     privateKeyPath = os.path.dirname(os.path.realpath(sys.argv[0])) + "\RSA_private.pem" #To get directory of current folder
     if os.path.exists(privateKeyPath):
-        print("RSA Private Key Exists.\n")
         RSA_Private_Key = loadPrivateKey(privateKeyPath)
     else:
-        print("Generating new RSA Private Key.\n")
         #Generates a new RSA Private Key
         RSA_Private_Key = rsa.generate_private_key(
                 public_exponent=65537,
@@ -54,10 +52,6 @@ def RSA_GenerateKeyPairs():
     return RSA_Private_Key
 
 def DH_Signature(DH_pubKey, RSA_Private_Key):
-    #RSA_Private_Key = RSA_GenerateKeyPairs()
-        
-    #RSA_Public_Key = RSA_Private_Key.public_key()
-    
     signed_DH_pubKey = RSA_Private_Key.sign(
         DH_pubKey.public_bytes(
                 encoding=serialization.Encoding.PEM,
@@ -71,40 +65,6 @@ def DH_Signature(DH_pubKey, RSA_Private_Key):
     )
         
     return signed_DH_pubKey
-
-#For Peer
-def DH_Signature_Peer(DH_pubKey):
-    #Load RSA Private Key if it exists, else generates a new one and stores it.
-    privateKeyPath = os.path.dirname(os.path.realpath(sys.argv[0])) + "\Peer_RSA_private.pem" #To get directory of current folder
-    if os.path.exists(privateKeyPath):
-        print("Peer RSA Private Key Exists.\n")
-        RSA_Private_Key = loadPrivateKey(privateKeyPath)
-    else:
-        print("Generating new Peer RSA Private Key.\n")
-        #Generates a new RSA Private Key
-        RSA_Private_Key = rsa.generate_private_key(
-                public_exponent=65537,
-                key_size=2048,
-                backend=default_backend()
-                )
-        #Stores the RSA Private Key
-        savePrivateKey(RSA_Private_Key, privateKeyPath)
-        
-    RSA_Public_Key = RSA_Private_Key.public_key()
-    
-    signed_DH_pubKey = RSA_Private_Key.sign(
-        DH_pubKey.public_bytes(
-                encoding=serialization.Encoding.PEM,
-                format=serialization.PublicFormat.SubjectPublicKeyInfo
-        ),
-        padding.PSS(
-            mgf=padding.MGF1(hashes.SHA256()),
-            salt_length=padding.PSS.MAX_LENGTH
-        ),
-        hashes.SHA256()
-    )
-        
-    return signed_DH_pubKey, RSA_Public_Key
 
 def encrypt(cipher, plaintext):
     encryptor = cipher.encryptor()

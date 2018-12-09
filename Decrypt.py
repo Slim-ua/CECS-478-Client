@@ -2,7 +2,7 @@
 """
 Created on Thu Oct 18 14:51:06 2018
 
-@author: Kyle Jr
+@author: Kyle Westmoreland
 """
 
 from cryptography.hazmat.primitives import hashes, hmac

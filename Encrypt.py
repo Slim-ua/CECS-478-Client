@@ -2,7 +2,7 @@
 """
 Created on Tue Oct 16 16:07:03 2018
 
-@author: Kyle Jr
+@author: Kyle Westmoreland
 """
 
 import os, sys, os.path
@@ -35,8 +35,8 @@ def loadPrivateKey(filename):
     
     return privateKey
     
-def DH_Signature(DH_pubKey):
-    #Load RSA Private Key if it exists, else generates a new one and stores it.
+#Load RSA Private Key if it exists, else generates a new one and stores it.
+def RSA_GenerateKeyPairs():
     privateKeyPath = os.path.dirname(os.path.realpath(sys.argv[0])) + "\RSA_private.pem" #To get directory of current folder
     if os.path.exists(privateKeyPath):
         print("RSA Private Key Exists.\n")
@@ -51,8 +51,12 @@ def DH_Signature(DH_pubKey):
                 )
         #Stores the RSA Private Key
         savePrivateKey(RSA_Private_Key, privateKeyPath)
+    return RSA_Private_Key
+
+def DH_Signature(DH_pubKey, RSA_Private_Key):
+    #RSA_Private_Key = RSA_GenerateKeyPairs()
         
-    RSA_Public_Key = RSA_Private_Key.public_key()
+    #RSA_Public_Key = RSA_Private_Key.public_key()
     
     signed_DH_pubKey = RSA_Private_Key.sign(
         DH_pubKey.public_bytes(
@@ -66,7 +70,7 @@ def DH_Signature(DH_pubKey):
         hashes.SHA256()
     )
         
-    return signed_DH_pubKey, RSA_Public_Key
+    return signed_DH_pubKey
 
 #For Peer
 def DH_Signature_Peer(DH_pubKey):

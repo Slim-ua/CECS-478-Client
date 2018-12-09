@@ -4,7 +4,7 @@ Created on Wed Dec  5 17:59:29 2018
 
 @author: Luisa
 """
-import sys, ECDH, Encrypt
+import sys, ECDH, Encrypt, binascii
 from cryptography.hazmat.primitives import serialization
 
 baseURL = "https://www.brivatekeyle.me/"
@@ -75,17 +75,22 @@ def logOrRegister(choice):
         
         DH_storeable_public_key = DH_private_key.public_key().public_bytes(
             encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
             #encryption_algorithm=serialization.BestAvailableEncryption(b'brivatekeyle')
         )
         RSA_storeable_public_key = RSA_private_key.public_key().public_bytes(
             encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
             #encryption_algorithm=serialization.BestAvailableEncryption(b'brivatekeyle')
         )
+        #print(DH_storeable_public_key)
+        #print(RSA_storeable_public_key)
         
         #Creates signature for DH Public Key
-        signed_DH_pubKey = Encrypt.DH_Signature(DH_private_key.public_key(), RSA_private_key)
+        signed_DH_pubKey = binascii.hexlify(Encrypt.DH_Signature(DH_private_key.public_key(), RSA_private_key))
+        
+        #print(signed_DH_pubKey)
+        #print(binascii.unhexlify(signed_DH_pubKey))
         
     else: #Register
         username = input(createNameMessage)
@@ -97,17 +102,20 @@ def logOrRegister(choice):
         
         DH_storeable_public_key = DH_private_key.public_key().public_bytes(
             encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
             #encryption_algorithm=serialization.BestAvailableEncryption(b'brivatekeyle')
         )
         RSA_storeable_public_key = RSA_private_key.public_key().public_bytes(
             encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
             #encryption_algorithm=serialization.BestAvailableEncryption(b'brivatekeyle')
         )
+        #print(DH_storeable_public_key)
+        #print(RSA_storeable_public_key)
         
         #Creates signature for DH Public Key
-        signed_DH_pubKey = Encrypt.DH_Signature(DH_private_key.public_key(), RSA_private_key)
+        signed_DH_pubKey = binascii.hexlify(Encrypt.DH_Signature(DH_private_key.public_key(), RSA_private_key))
+        #print(signed_DH_pubKey)
         
         
     PARAMS = {'name':username, 'password':password, 'DH_Pub_Key':DH_storeable_public_key, 'Signed_DH_Pub_Key':signed_DH_pubKey, 'RSA_Pub_Key':RSA_storeable_public_key}

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wed Dec  5 17:59:29 2018
-
 @author: Luisa
 """
 import sys, ECDH, Encrypt, binascii, requests, Decrypt
@@ -31,7 +30,6 @@ invalidSelectionMessage = "Invalid Message Selection."
 
 def MakeRequest(URL, PARAMS, HEADERS, API_Type):
     # sending get request and saving the response as response object 
-    
     if API_Type == "get":
         r = requests.get(url = URL, params = PARAMS, headers = HEADERS)
     elif API_Type == "post":
@@ -45,6 +43,7 @@ def MakeRequest(URL, PARAMS, HEADERS, API_Type):
         print("Invalid API_Type.")
     return r
 
+#Method for creating the request parameters on client run based on user input choice
 def welcomeMenu(choice):
     URL = ""
     API_Type = ""
@@ -65,7 +64,8 @@ def welcomeMenu(choice):
         
     return URL, API_Type, out
 
-def logedInMenu(choice, username):
+#Method for creating the request parameters on client login based on user input choice
+def loggedInMenu(choice, username):
     URL = baseURL
     check_For_Messages = True
     API_Type = ""
@@ -95,6 +95,7 @@ def logedInMenu(choice, username):
         
     return URL, API_Type, check_For_Messages, exitCode
 
+#Method for generating/retrieving keypairs and signature
 def getKeys():
     DH_private_key = ECDH.GenerateKeyPairs()
     RSA_private_key = Encrypt.RSA_GenerateKeyPairs()
@@ -112,13 +113,15 @@ def getKeys():
     signed_DH_pubKey = binascii.hexlify(Encrypt.DH_Signature(DH_private_key.public_key(), RSA_private_key))
     
     return DH_storeable_public_key, signed_DH_pubKey, RSA_storeable_public_key
-    
+
+#Method for actions taken when on login screen based on choice
+#Returns parameters/headers needed for requests    
 def logOrRegister(choice):
-    if choice == "1": #Log in
+    if choice == "1":   #Log in
         username = input(typeNameMessage)
         password = input(typePassMessage)
         
-    else: #Register
+    else:               #Register
         username = input(createNameMessage)
         password = input(createPassMessage)
     
@@ -132,6 +135,7 @@ def logOrRegister(choice):
     HEADERS = {}
     return PARAMS, HEADERS
 
+#Method for handling login response
 def handleApiResponse(data):
     sessionToken = None
     userName = ""
@@ -141,16 +145,15 @@ def handleApiResponse(data):
         userName = data['username']
     else:
         print(data['message'])
-        
     return sessionToken, userName
 
-def logedInAction(choice, sessionToken, username):
+#Method for using login token for authentication while logged on
+def loggedInAction(sessionToken):
     HEADERS = {'x-access-token':sessionToken}
     PARAMS = {}
-    
     return HEADERS, PARAMS
 
-
+#Method used when changing a message status parameter to 'read' when viewed
 def changeMessageStatusToRead(msg, sessionToken):
     URL = baseURL + "message/" + msg['_id']
     API_Type = "put"
@@ -158,193 +161,153 @@ def changeMessageStatusToRead(msg, sessionToken):
     PARAMS = {'status':readStatusMessage}
     MakeRequest(URL, PARAMS, HEADERS, API_Type)
     
-    
-def printMessage(msg):
+#Method for printing the date and sender for a user
+def printDate_Sender(msg):
     if 'Message_date' in msg:
         print('Date: ' + msg['Message_date'])
     if 'sender' in msg:
         print('Sent From: ' + msg['sender'])
+        
+#Method for printing the date and receiver for a user
+def printDate_Receiver(msg):
+    if 'Message_date' in msg:
+        print('Date: ' + msg['Message_date'])
+    if 'receiver' in msg:
+        print('Sent To: ' + msg['receiver'])
+        
+#Method for retrieving iv, signature and ciphertext
+def retrieveMessageInfo(msg):
+    if 'iv' in msg:
+        iv = msg['iv']
+    if 'signature' in msg:
+        HMAC_signature = msg['signature']
     if 'message' in msg:
-        print('Message: ' + msg['message'])
-    print()
+        ct = msg['message']
+    return iv, HMAC_signature, ct
     
-
-def viewAllMessagesManager(data, sessionToken):
-    if not data:
-        print(noMessagesAvailable)
-    else:
-        for msg in data:
-            if 'Message_date' in msg:
-                print('Date: ' + msg['Message_date'])
-            if 'sender' in msg:
-                print('Sent From: ' + msg['sender'])
-            if 'iv' in msg:
-                iv = msg['iv']
-            
-            if 'signature' in msg:
-                HMAC_signature = msg['signature']
-            if 'message' in msg:
-                ct = msg['message']
-                
-                #retrieve/verify sender's key
-                URL = "https://www.brivatekeyle.me/api/users/" + msg['sender']
-                API_Type = "get"
-                HEADERS = {'x-access-token':sessionToken}
-                PARAMS = {}
-                response = MakeRequest(URL, PARAMS, HEADERS, API_Type)
-                data2 = response.json()
-                for msg2 in data2:
-                    if 'DH_Pub_Key' in msg2:
-                        Sender_DH_Pub_Key = serialization.load_pem_public_key(msg2['DH_Pub_Key'].encode(), default_backend())
-                    else:
-                        print("Error, no DH_Pub_Key found.")
-                    if 'Signed_DH_Pub_Key' in msg2:
-                        Sender_Signed_DH_Pub_Key = binascii.unhexlify(msg2['Signed_DH_Pub_Key'])
-                    else:
-                        print("Error, no DH_Pub_Key found.")
-                    if 'RSA_Pub_Key' in msg2:
-                        Sender_RSA_Pub_Key = serialization.load_pem_public_key(msg2['RSA_Pub_Key'].encode(), default_backend())
-                    else:
-                        print("Error, no RSA_Pub_Key found.")
-                    
-                    Sender_RSA_Pub_Key.verify(
-                        Sender_Signed_DH_Pub_Key,
-                        Sender_DH_Pub_Key.public_bytes(
-                                encoding=serialization.Encoding.PEM,
-                                format=serialization.PublicFormat.SubjectPublicKeyInfo
-                        ),
-                        padding.PSS(
-                            mgf=padding.MGF1(hashes.SHA256()),
-                            salt_length=padding.PSS.MAX_LENGTH
-                        ),
-                        hashes.SHA256())
-                        
-                    DH_private_key = ECDH.GenerateKeyPairs()   
-                    shared_key = DH_private_key.exchange(ec.ECDH(), Sender_DH_Pub_Key)
-                    derived_key_AES = HKDF(
-                        algorithm=hashes.SHA512(),
-                        length=32,
-                        salt=b'100',  
-                        info=b'handshake data',
-                        backend=default_backend()
-                    ).derive(shared_key)
-                    
-                    derived_key_HMAC = HKDF(
-                        algorithm=hashes.SHA512(),
-                        length=32,
-                        salt=b'99',  
-                        info=b'handshake data',
-                        backend=default_backend()
-                    ).derive(shared_key)
-                
-                decrypted_msg = Decrypt.runDecryption(binascii.unhexlify(ct), binascii.unhexlify(iv), binascii.unhexlify(HMAC_signature), derived_key_AES, derived_key_HMAC)
-            
-            print('\nDecrypted Message: ' + decrypted_msg.decode())
-            print()
-            print('-----------------------------')
-            print()
-            
-            if msg['status'] != readStatusMessage:
-                #Changes message 'status' to Read
-                changeMessageStatusToRead(msg, sessionToken)
-                
-def viewAllUnreadMessagesManager(data, sessionToken):
-    unread_Flag = False
-    if not data:
-        print(noUnreadMessagesAvailable)
-    else:
-        for msg in data:
-            if msg['status'] == 'Unread' or msg['status'] == 'New':
-                if 'Message_date' in msg:
-                    print('Date: ' + msg['Message_date'])
-                if 'sender' in msg:
-                    print('Sent From: ' + msg['sender'])
-                if 'message' in msg:
-                    ct = msg['message']
-                    
-                    #retrieve/verify sender's key
-                    URL = "https://www.brivatekeyle.me/api/users/" + msg['sender']
-                    API_Type = "get"
-                    HEADERS = {'x-access-token':sessionToken}
-                    PARAMS = {}
-                    response = MakeRequest(URL, PARAMS, HEADERS, API_Type)
-                    data2 = response.json()
-                    for msg2 in data2:
-                        if 'DH_Pub_Key' in msg2:
-                            Sender_DH_Pub_Key = serialization.load_pem_public_key(msg2['DH_Pub_Key'].encode(), default_backend())
-                        else:
-                            print("Error, no DH_Pub_Key found.")
-                        if 'Signed_DH_Pub_Key' in msg2:
-                            Sender_Signed_DH_Pub_Key = binascii.unhexlify(msg2['Signed_DH_Pub_Key'])
-                        else:
-                            print("Error, no DH_Pub_Key found.")
-                        if 'RSA_Pub_Key' in msg2:
-                            Sender_RSA_Pub_Key = serialization.load_pem_public_key(msg2['RSA_Pub_Key'].encode(), default_backend())
-                        else:
-                            print("Error, no RSA_Pub_Key found.")
-                        
-                        Sender_RSA_Pub_Key.verify(
-                            Sender_Signed_DH_Pub_Key,
-                            Sender_DH_Pub_Key.public_bytes(
-                                    encoding=serialization.Encoding.PEM,
-                                    format=serialization.PublicFormat.SubjectPublicKeyInfo
-                            ),
-                            padding.PSS(
-                                mgf=padding.MGF1(hashes.SHA256()),
-                                salt_length=padding.PSS.MAX_LENGTH
-                            ),
-                            hashes.SHA256())
-                            
-                        DH_private_key = ECDH.GenerateKeyPairs()   
-                        shared_key = DH_private_key.exchange(ec.ECDH(), Sender_DH_Pub_Key)
-                        derived_key_AES = HKDF(
-                            algorithm=hashes.SHA512(),
-                            length=32,
-                            salt=b'100',  
-                            info=b'handshake data',
-                            backend=default_backend()
-                        ).derive(shared_key)
-                        
-                        derived_key_HMAC = HKDF(
-                            algorithm=hashes.SHA512(),
-                            length=32,
-                            salt=b'99',  
-                            info=b'handshake data',
-                            backend=default_backend()
-                        ).derive(shared_key)
-                    
-                    if 'iv' in msg:
-                        iv = msg['iv']
-                    
-                    if 'signature' in msg:
-                        HMAC_signature = msg['signature']
-                    
-                    decrypted_msg = Decrypt.runDecryption(binascii.unhexlify(ct), binascii.unhexlify(iv), binascii.unhexlify(HMAC_signature), derived_key_AES, derived_key_HMAC)
-                    
-                    print('\nDecrypted Message: ' + decrypted_msg.decode())
-                    print()
-                    print('-----------------------------')
-                    print()
-                
-                #Changes message 'status' to Read
-                URL = "https://www.brivatekeyle.me/message/" + msg['_id']
-                API_Type = "put"
-                HEADERS = {'x-access-token':sessionToken}
-                PARAMS = {'status':'Read'}
-                MakeRequest(URL, PARAMS, HEADERS, API_Type)
-                
-                unread_Flag = True
+#Method to retrieve and verify a sender's key, as well as creating the derived secret keys
+def retrieveAndVerifySender(msg, sessionToken):
+    #retrieve/verify sender's key
+    URL = "https://www.brivatekeyle.me/api/users/" + msg['sender']
+    API_Type = "get"
+    HEADERS = {'x-access-token':sessionToken}
+    PARAMS = {}
+    response = MakeRequest(URL, PARAMS, HEADERS, API_Type)
+    data2 = response.json()
+    for msg2 in data2:
+        if 'DH_Pub_Key' in msg2:
+            Sender_DH_Pub_Key = serialization.load_pem_public_key(msg2['DH_Pub_Key'].encode(), default_backend())
+        else:
+            print("Error, no DH_Pub_Key found.")
+        if 'Signed_DH_Pub_Key' in msg2:
+            Sender_Signed_DH_Pub_Key = binascii.unhexlify(msg2['Signed_DH_Pub_Key'])
+        else:
+            print("Error, no DH_Pub_Key found.")
+        if 'RSA_Pub_Key' in msg2:
+            Sender_RSA_Pub_Key = serialization.load_pem_public_key(msg2['RSA_Pub_Key'].encode(), default_backend())
+        else:
+            print("Error, no RSA_Pub_Key found.")
+        #Verify the sender's RSA public key
+        Sender_RSA_Pub_Key.verify(
+            Sender_Signed_DH_Pub_Key,
+            Sender_DH_Pub_Key.public_bytes(
+                    encoding=serialization.Encoding.PEM,
+                    format=serialization.PublicFormat.SubjectPublicKeyInfo
+            ),
+            padding.PSS(
+                mgf=padding.MGF1(hashes.SHA256()),
+                salt_length=padding.PSS.MAX_LENGTH
+            ),
+            hashes.SHA256())
+        #Retrieve/generates user's DH key pair in order to create derived shared secret keys
+        DH_private_key = ECDH.GenerateKeyPairs()   
+        shared_key = DH_private_key.exchange(ec.ECDH(), Sender_DH_Pub_Key)
+        #Derived key used for AES
+        derived_key_AES = HKDF(
+            algorithm=hashes.SHA512(),
+            length=32,
+            salt=b'100',  
+            info=b'handshake data',
+            backend=default_backend()
+        ).derive(shared_key)
+        #Derived key used for HMAC
+        derived_key_HMAC = HKDF(
+            algorithm=hashes.SHA512(),
+            length=32,
+            salt=b'99',  
+            info=b'handshake data',
+            backend=default_backend()
+        ).derive(shared_key)
+    return derived_key_AES, derived_key_HMAC
+ 
+#Method to retrieve and verify a sender's key, as well as creating the derived secret keys using receiver
+def retrieveAndVerifyBoth(msg, sessionToken, receiver):
+    #retrieve/verify sender's key
+    URL = "https://www.brivatekeyle.me/api/users/" + msg['sender']
+    API_Type = "get"
+    HEADERS = {'x-access-token':sessionToken}
+    PARAMS = {}
+    response = MakeRequest(URL, PARAMS, HEADERS, API_Type)
+    data2 = response.json()
+    for msg2 in data2:
+        if 'DH_Pub_Key' in msg2:
+            Sender_DH_Pub_Key = serialization.load_pem_public_key(msg2['DH_Pub_Key'].encode(), default_backend())
+        else:
+            print("Error, no DH_Pub_Key found.")
+        if 'Signed_DH_Pub_Key' in msg2:
+            Sender_Signed_DH_Pub_Key = binascii.unhexlify(msg2['Signed_DH_Pub_Key'])
+        else:
+            print("Error, no DH_Pub_Key found.")
+        if 'RSA_Pub_Key' in msg2:
+            Sender_RSA_Pub_Key = serialization.load_pem_public_key(msg2['RSA_Pub_Key'].encode(), default_backend())
+        else:
+            print("Error, no RSA_Pub_Key found.")
+        
+        Sender_RSA_Pub_Key.verify(
+            Sender_Signed_DH_Pub_Key,
+            Sender_DH_Pub_Key.public_bytes(
+                    encoding=serialization.Encoding.PEM,
+                    format=serialization.PublicFormat.SubjectPublicKeyInfo
+            ),
+            padding.PSS(
+                mgf=padding.MGF1(hashes.SHA256()),
+                salt_length=padding.PSS.MAX_LENGTH
+            ),
+            hashes.SHA256())
+        #Retrieve receiver's DH public key
+        URL = "https://www.brivatekeyle.me/api/users/" + receiver
+        API_Type = "get"
+        HEADERS = {'x-access-token':sessionToken}
+        PARAMS = {}
+        response = MakeRequest(URL, PARAMS, HEADERS, API_Type)
+        data3 = response.json()
+        for msg3 in data3:
+            if 'DH_Pub_Key' in msg3:
+                Receiver_DH_Pub_Key = serialization.load_pem_public_key(msg3['DH_Pub_Key'].encode(), default_backend())
             else:
-                #Prints message if no messages were found from end of search
-                if msg['_id'] == data[-1]['_id']:
-                    if unread_Flag == False:
-                        print(noUnreadMessagesAvailable)
-            
+                print("Error, no DH_Pub_Key found.")
+        #Generate/retrieve set of ECDH key pairs
+        DH_private_key = ECDH.GenerateKeyPairs()
+        shared_key = DH_private_key.exchange(ec.ECDH(), Receiver_DH_Pub_Key)
+        derived_key_AES = HKDF(
+            algorithm=hashes.SHA512(),
+            length=32,
+            salt=b'100',  
+            info=b'handshake data',
+            backend=default_backend()
+        ).derive(shared_key)
+        
+        derived_key_HMAC = HKDF(
+            algorithm=hashes.SHA512(),
+            length=32,
+            salt=b'99',  
+            info=b'handshake data',
+            backend=default_backend()
+        ).derive(shared_key)
+    return derived_key_AES, derived_key_HMAC    
 
-def sendMessage(username, sessionToken):
-    #Generate/retrieve set of ECDH key pairs
-    DH_private_key = ECDH.GenerateKeyPairs()
-    receiver = input("Enter the receiver:\n")
+#Method to retrieve and verify a receiver's key, as well as creating the derived secret keys
+def retrieveAndVerifyReceiver(sessionToken, receiver):  
     #retrieve/verify receiver's key
     URL = "https://www.brivatekeyle.me/api/users/" + receiver
     API_Type = "get"
@@ -366,7 +329,7 @@ def sendMessage(username, sessionToken):
         else:
             print("Error, no RSA_Pub_Key found.")
     
-    #In sender, retrieve receiver's RSA Public Key + Signed DH Public Key + DH Public Key and Verify
+    #Verify the receiver's RSA public key
     Receiver_RSA_Pub_Key.verify(
             Receiver_Signed_DH_Pub_Key,
             Receiver_DH_Pub_Key.public_bytes(
@@ -378,8 +341,10 @@ def sendMessage(username, sessionToken):
                 salt_length=padding.PSS.MAX_LENGTH
             ),
             hashes.SHA256())
-    
+    #Retrieve/generates user's DH key pair in order to create derived shared secret keys
+    DH_private_key = ECDH.GenerateKeyPairs()
     shared_key = DH_private_key.exchange(ec.ECDH(), Receiver_DH_Pub_Key)
+    #Derived key used for AES
     derived_key_AES = HKDF(
         algorithm=hashes.SHA512(),
         length=32,
@@ -387,7 +352,7 @@ def sendMessage(username, sessionToken):
         info=b'handshake data',
         backend=default_backend()
     ).derive(shared_key)
-    
+    #Derived key used for HMAC
     derived_key_HMAC = HKDF(
         algorithm=hashes.SHA512(),
         length=32,
@@ -395,10 +360,62 @@ def sendMessage(username, sessionToken):
         info=b'handshake data',
         backend=default_backend()
     ).derive(shared_key)
+    return derived_key_AES, derived_key_HMAC
+#Method for printing out decrypted messages in a neat way
+def printDecryption(decrypted_msg):
+    print('\nDecrypted Message: ' + decrypted_msg.decode())
+    print()
+    print('-----------------------------')
+    print()
+
+def viewAllMessagesManager(data, sessionToken):
+    if not data:
+        print(noMessagesAvailable)
+    else:
+        #for the message, print out and retrieve necessary information, and decrypt it
+        for msg in data:
+            printDate_Sender(msg)
+            if 'message' in msg:
+                iv, HMAC_signature, ct = retrieveMessageInfo(msg)
+                derived_key_AES, derived_key_HMAC = retrieveAndVerifySender(msg, sessionToken)
+                decrypted_msg = Decrypt.runDecryption(binascii.unhexlify(ct), binascii.unhexlify(iv), binascii.unhexlify(HMAC_signature), derived_key_AES, derived_key_HMAC)
+                printDecryption(decrypted_msg)
+            #Change the status of the message to 'read' if not already
+            if msg['status'] != readStatusMessage:
+                #Changes message 'status' to Read
+                changeMessageStatusToRead(msg, sessionToken)
+                
+def viewAllUnreadMessagesManager(data, sessionToken):
+    unread_Flag = False
+    if not data:
+        print(noUnreadMessagesAvailable)
+    else:
+        for msg in data:
+            if msg['status'] == 'Unread' or msg['status'] == 'New':
+                printDate_Sender(msg)
+                if 'message' in msg:
+                    iv, HMAC_signature, ct = retrieveMessageInfo(msg)
+                    derived_key_AES, derived_key_HMAC = retrieveAndVerifySender(msg, sessionToken)
+                    decrypted_msg = Decrypt.runDecryption(binascii.unhexlify(ct), binascii.unhexlify(iv), binascii.unhexlify(HMAC_signature), derived_key_AES, derived_key_HMAC)
+                    printDecryption(decrypted_msg)
+                #Changes message 'status' to Read
+                changeMessageStatusToRead(msg, sessionToken)
+                unread_Flag = True
+            else:
+                #Prints message if no messages were found from end of search
+                if msg['_id'] == data[-1]['_id']:
+                    if unread_Flag == False:
+                        print(noUnreadMessagesAvailable)
+            
+
+def sendMessage(username, sessionToken):
+    receiver = input("Enter the receiver:\n")
+    #Retrieve the derived AED and HMAC secret keys
+    derived_key_AES, derived_key_HMAC = retrieveAndVerifyReceiver(sessionToken, receiver)
     message = input("Enter your message:\n")
+    #Encrypts the message and stores the encrypted message on the server
     ct, iv, HMAC_signature = Encrypt.runEncryption(message,
                           derived_key_AES, derived_key_HMAC)
-    
     URL = "https://www.brivatekeyle.me/messages"
     API_Type = "post"
     HEADERS = {'x-access-token':sessionToken}
@@ -414,213 +431,54 @@ def viewSentMessages(data, sessionToken, username):
     if not data:
         print(noMessagesSent)
     else:
+        #Retrieves all messages with sender matching user
         for msg in data:
             if msg['sender'] == username:
-                if 'Message_date' in msg:
-                    print('Date: ' + msg['Message_date'])
-                if 'receiver' in msg:
-                    print('Sent To: ' + msg['receiver'])
-                ct = msg['message']
+                printDate_Receiver(msg)
                 receiver = msg['receiver']
-                #retrieve/verify sender's key
-                URL = "https://www.brivatekeyle.me/api/users/" + msg['sender']
-                API_Type = "get"
-                HEADERS = {'x-access-token':sessionToken}
-                PARAMS = {}
-                response = MakeRequest(URL, PARAMS, HEADERS, API_Type)
-                data2 = response.json()
-                for msg2 in data2:
-                    if 'DH_Pub_Key' in msg2:
-                        Sender_DH_Pub_Key = serialization.load_pem_public_key(msg2['DH_Pub_Key'].encode(), default_backend())
-                    else:
-                        print("Error, no DH_Pub_Key found.")
-                    if 'Signed_DH_Pub_Key' in msg2:
-                        Sender_Signed_DH_Pub_Key = binascii.unhexlify(msg2['Signed_DH_Pub_Key'])
-                    else:
-                        print("Error, no DH_Pub_Key found.")
-                    if 'RSA_Pub_Key' in msg2:
-                        Sender_RSA_Pub_Key = serialization.load_pem_public_key(msg2['RSA_Pub_Key'].encode(), default_backend())
-                    else:
-                        print("Error, no RSA_Pub_Key found.")
-                    
-                    Sender_RSA_Pub_Key.verify(
-                        Sender_Signed_DH_Pub_Key,
-                        Sender_DH_Pub_Key.public_bytes(
-                                encoding=serialization.Encoding.PEM,
-                                format=serialization.PublicFormat.SubjectPublicKeyInfo
-                        ),
-                        padding.PSS(
-                            mgf=padding.MGF1(hashes.SHA256()),
-                            salt_length=padding.PSS.MAX_LENGTH
-                        ),
-                        hashes.SHA256())
-                    
-                    
-                    URL = "https://www.brivatekeyle.me/api/users/" + receiver
-                    API_Type = "get"
-                    HEADERS = {'x-access-token':sessionToken}
-                    PARAMS = {}
-                    response = MakeRequest(URL, PARAMS, HEADERS, API_Type)
-                    data3 = response.json()
-                    for msg3 in data3:
-                        if 'DH_Pub_Key' in msg3:
-                            Receiver_DH_Pub_Key = serialization.load_pem_public_key(msg3['DH_Pub_Key'].encode(), default_backend())
-                        else:
-                            print("Error, no DH_Pub_Key found.")
-                    
-                    #Generate/retrieve set of ECDH key pairs
-                    DH_private_key = ECDH.GenerateKeyPairs()
-                    shared_key = DH_private_key.exchange(ec.ECDH(), Receiver_DH_Pub_Key)
-                    derived_key_AES = HKDF(
-                        algorithm=hashes.SHA512(),
-                        length=32,
-                        salt=b'100',  
-                        info=b'handshake data',
-                        backend=default_backend()
-                    ).derive(shared_key)
-                    
-                    derived_key_HMAC = HKDF(
-                        algorithm=hashes.SHA512(),
-                        length=32,
-                        salt=b'99',  
-                        info=b'handshake data',
-                        backend=default_backend()
-                    ).derive(shared_key)
-                
-                if 'iv' in msg:
-                    iv = msg['iv']
-                
-                if 'signature' in msg:
-                    HMAC_signature = msg['signature']
-                
+                derived_key_AES, derived_key_HMAC = retrieveAndVerifyBoth(msg, sessionToken, receiver)
+                iv, HMAC_signature, ct = retrieveMessageInfo(msg)
                 decrypted_msg = Decrypt.runDecryption(binascii.unhexlify(ct), binascii.unhexlify(iv), binascii.unhexlify(HMAC_signature), derived_key_AES, derived_key_HMAC)
-                
-                print('\nDecrypted Message: ' + decrypted_msg.decode())
-                print()
-                print('-----------------------------')
-                print()
+                printDecryption(decrypted_msg)
                 sent_Flag = True
             else:
                 if msg['_id'] == data[-1]['_id']:
                     if sent_Flag == False:
                         print('No Messages Sent.')
-
-def makeDeleteRequest(data, msgNumber, sessionToken):
-    URL = "https://www.brivatekeyle.me/message/" + data[msgNumber]['_id']
-    API_Type = "delete"
-    HEADERS = {'x-access-token':sessionToken}
-    PARAMS = {}
-    return MakeRequest(URL, PARAMS, HEADERS, API_Type)
-    
-    
+     
 def deleteAMessage(data, sessionToken, username):
     amount = 0
     delete_Flag = False
     if not data:
         print(noMessagesAvailable)
     else:
+        #Retrieves all messages with sender matching user, and displays them with message #
         for msg in data:
             if msg['sender'] == username:
                 amount = amount + 1
                 print("Message #" + str(amount) + ":")
-                if 'Message_date' in msg:
-                    print('Date: ' + msg['Message_date'])
-                if 'receiver' in msg:
-                        print('Sent To: ' + msg['receiver'])
+                printDate_Receiver(msg)
                 if 'message' in msg:
-                    ct = msg['message']
                     receiver = msg['receiver']
-                    
-                    #retrieve/verify sender's key
-                    URL = "https://www.brivatekeyle.me/api/users/" + msg['sender']
-                    API_Type = "get"
-                    HEADERS = {'x-access-token':sessionToken}
-                    PARAMS = {}
-                    response = MakeRequest(URL, PARAMS, HEADERS, API_Type)
-                    data2 = response.json()
-                    for msg2 in data2:
-                        if 'DH_Pub_Key' in msg2:
-                            Sender_DH_Pub_Key = serialization.load_pem_public_key(msg2['DH_Pub_Key'].encode(), default_backend())
-                        else:
-                            print("Error, no DH_Pub_Key found.")
-                        if 'Signed_DH_Pub_Key' in msg2:
-                            Sender_Signed_DH_Pub_Key = binascii.unhexlify(msg2['Signed_DH_Pub_Key'])
-                        else:
-                            print("Error, no DH_Pub_Key found.")
-                        if 'RSA_Pub_Key' in msg2:
-                            Sender_RSA_Pub_Key = serialization.load_pem_public_key(msg2['RSA_Pub_Key'].encode(), default_backend())
-                        else:
-                            print("Error, no RSA_Pub_Key found.")
-                        
-                        Sender_RSA_Pub_Key.verify(
-                            Sender_Signed_DH_Pub_Key,
-                            Sender_DH_Pub_Key.public_bytes(
-                                    encoding=serialization.Encoding.PEM,
-                                    format=serialization.PublicFormat.SubjectPublicKeyInfo
-                            ),
-                            padding.PSS(
-                                mgf=padding.MGF1(hashes.SHA256()),
-                                salt_length=padding.PSS.MAX_LENGTH
-                            ),
-                            hashes.SHA256())
-                        
-                        URL = "https://www.brivatekeyle.me/api/users/" + receiver
-                        API_Type = "get"
-                        HEADERS = {'x-access-token':sessionToken}
-                        PARAMS = {}
-                        response = MakeRequest(URL, PARAMS, HEADERS, API_Type)
-                        data3 = response.json()
-                        for msg3 in data3:
-                            if 'DH_Pub_Key' in msg3:
-                                Receiver_DH_Pub_Key = serialization.load_pem_public_key(msg3['DH_Pub_Key'].encode(), default_backend())
-                            else:
-                                print("Error, no DH_Pub_Key found.")
-                                
-                        #Generate/retrieve set of ECDH key pairs
-                        DH_private_key = ECDH.GenerateKeyPairs()
-                        shared_key = DH_private_key.exchange(ec.ECDH(), Receiver_DH_Pub_Key)
-                        derived_key_AES = HKDF(
-                            algorithm=hashes.SHA512(),
-                            length=32,
-                            salt=b'100',  
-                            info=b'handshake data',
-                            backend=default_backend()
-                        ).derive(shared_key)
-                        
-                        derived_key_HMAC = HKDF(
-                            algorithm=hashes.SHA512(),
-                            length=32,
-                            salt=b'99',  
-                            info=b'handshake data',
-                            backend=default_backend()
-                        ).derive(shared_key)
-                    
-                    if 'iv' in msg:
-                        iv = msg['iv']
-                    
-                    if 'signature' in msg:
-                        HMAC_signature = msg['signature']
-                    
+                    derived_key_AES, derived_key_HMAC = retrieveAndVerifyBoth(msg, sessionToken, receiver)
+                    iv, HMAC_signature, ct = retrieveMessageInfo(msg)
                     decrypted_msg = Decrypt.runDecryption(binascii.unhexlify(ct), binascii.unhexlify(iv), binascii.unhexlify(HMAC_signature), derived_key_AES, derived_key_HMAC)
-                    
-                    print('\nDecrypted Message: ' + decrypted_msg.decode())
-                    print()
-                    print('-----------------------------')
-                    print()
+                    printDecryption(decrypted_msg)
                 delete_Flag = True
             else:
                 amount = amount + 1
                 if msg['_id'] == data[-1]['_id']:
                     if delete_Flag == False:
                         print(noMessagesAvailable)
+        #Algorithm for deleting a specific message
         while 1:
             if delete_Flag == False:
                 break
             try:
-                delete_Numb = int(input('Please enter which message # you would like to delete (0 = Cancel):\n'))
+                delete_Numb = int(input(deleteMessage))
                 delete_Numb = delete_Numb - 1
             except ValueError:
-                print('Input is not a number.')
+                print(notNumberMessage)
             #Deletes a message based on delete_Numb
             if delete_Numb == -1:
                 print(cancelDeletionMessage)

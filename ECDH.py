@@ -6,13 +6,13 @@ Created on Wed Dec  5 21:23:51 2018
 """
 
 import os, sys, Encrypt
-
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
 
-
+#Method to create or retrieve EC keypairs needed for Diffie-Hellman key exchange
 def GenerateKeyPairs():
     DHprivateKeyPath = os.path.dirname(os.path.realpath(sys.argv[0])) + "\DH_private.pem"
+    #Checks if key exists
     if os.path.exists(DHprivateKeyPath):
         DH_private_key = Encrypt.loadPrivateKey(DHprivateKeyPath)
     else:

@@ -51,6 +51,7 @@ def RSA_GenerateKeyPairs():
         savePrivateKey(RSA_Private_Key, privateKeyPath)
     return RSA_Private_Key
 
+#Signs a DH public key with a RSA private key
 def DH_Signature(DH_pubKey, RSA_Private_Key):
     signed_DH_pubKey = RSA_Private_Key.sign(
         DH_pubKey.public_bytes(
@@ -66,13 +67,15 @@ def DH_Signature(DH_pubKey, RSA_Private_Key):
         
     return signed_DH_pubKey
 
+#Encrypts plaintext with a given cipher
 def encrypt(cipher, plaintext):
     encryptor = cipher.encryptor()
     ciphertext = encryptor.update(plaintext) + encryptor.finalize()
     return ciphertext
 
+#Main encryption method
 def runEncryption(msg, derived_key_1_AES, derived_key_1_HMAC):
-    #Setup encryption variable
+    #Generates a random iv value
     iv = os.urandom(16)
     
     # PKCS#7 Padding used for encrypting message
@@ -84,6 +87,7 @@ def runEncryption(msg, derived_key_1_AES, derived_key_1_HMAC):
     #Encrypt text
     ct = encrypt(cipher, padded_msg)
     
+    #Creates a HMAC signature using a derived key from a shared secret key
     keyHMAC = derived_key_1_HMAC
     h = hmac.HMAC(keyHMAC, hashes.SHA256(), backend=default_backend())
     h.update(ct)

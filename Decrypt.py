@@ -10,6 +10,7 @@ from cryptography.hazmat.primitives import padding as Pad
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 
+#Main decryption method
 def runDecryption(ct, iv, HMAC_signature_in, derived_key_AES, derived_key_HMAC):
     #Regenerate HMAC tag with decrypted HMAC key
     HMAC_tag = hmac.HMAC(derived_key_HMAC, hashes.SHA256(), backend=default_backend())

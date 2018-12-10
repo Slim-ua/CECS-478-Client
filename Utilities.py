@@ -95,48 +95,40 @@ def logedInMenu(choice, username):
         
     return URL, API_Type, check_For_Messages, exitCode
 
+def getKeys():
+    DH_private_key = ECDH.GenerateKeyPairs()
+    RSA_private_key = Encrypt.RSA_GenerateKeyPairs()
+    
+    DH_storeable_public_key = DH_private_key.public_key().public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    )
+    RSA_storeable_public_key = RSA_private_key.public_key().public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    )
+
+    #Creates signature for DH Public Key
+    signed_DH_pubKey = binascii.hexlify(Encrypt.DH_Signature(DH_private_key.public_key(), RSA_private_key))
+    
+    return DH_storeable_public_key, signed_DH_pubKey, RSA_storeable_public_key
+    
 def logOrRegister(choice):
     if choice == "1": #Log in
         username = input(typeNameMessage)
         password = input(typePassMessage)
-        #Try to read private_key from local storage, if no key exists, creates pair + store
-        DH_private_key = ECDH.GenerateKeyPairs()
-        RSA_private_key = Encrypt.RSA_GenerateKeyPairs()
-        
-        DH_storeable_public_key = DH_private_key.public_key().public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo
-        )
-        RSA_storeable_public_key = RSA_private_key.public_key().public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo
-        )
-
-        #Creates signature for DH Public Key
-        signed_DH_pubKey = binascii.hexlify(Encrypt.DH_Signature(DH_private_key.public_key(), RSA_private_key))
         
     else: #Register
         username = input(createNameMessage)
         password = input(createPassMessage)
-        
-        #Create key pairs and stores private keys locally and public keys on server
-        DH_private_key = ECDH.GenerateKeyPairs()
-        RSA_private_key = Encrypt.RSA_GenerateKeyPairs()
-        
-        DH_storeable_public_key = DH_private_key.public_key().public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo
-        )
-        RSA_storeable_public_key = RSA_private_key.public_key().public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo
-        )
-        
-        #Creates signature for DH Public Key
-        signed_DH_pubKey = binascii.hexlify(Encrypt.DH_Signature(DH_private_key.public_key(), RSA_private_key))
-        
-        
-    PARAMS = {'name':username, 'password':password, 'DH_Pub_Key':DH_storeable_public_key, 'Signed_DH_Pub_Key':signed_DH_pubKey, 'RSA_Pub_Key':RSA_storeable_public_key}
+    
+    
+    DH_storeable_public_key, signed_DH_pubKey, RSA_storeable_public_key = getKeys()
+    
+    PARAMS = {'name':username, 'password':password, 
+              'DH_Pub_Key':DH_storeable_public_key, 
+              'Signed_DH_Pub_Key':signed_DH_pubKey, 
+              'RSA_Pub_Key':RSA_storeable_public_key}
     HEADERS = {}
     return PARAMS, HEADERS
 

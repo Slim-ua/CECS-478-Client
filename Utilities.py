@@ -3,7 +3,7 @@
 Created on Wed Dec  5 17:59:29 2018
 @author: Luisa
 """
-import sys, ECDH, Encrypt, binascii, requests, Decrypt
+import sys, ECDH, Encrypt, binascii, requests, Decrypt, getpass
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import padding, ec
@@ -119,11 +119,11 @@ def getKeys():
 def logOrRegister(choice):
     if choice == "1":   #Log in
         username = input(typeNameMessage)
-        password = input(typePassMessage)
+        password = getpass.getpass(typePassMessage)
         
     else:               #Register
         username = input(createNameMessage)
-        password = input(createPassMessage)
+        password = getpass.getpass(createPassMessage)
     
     
     DH_storeable_public_key, signed_DH_pubKey, RSA_storeable_public_key = getKeys()
